@@ -4,3 +4,6 @@ webpack.config.js
 .eslintignore
 .eslintrc
 .travis.yml
+coverage
+node_modules
+

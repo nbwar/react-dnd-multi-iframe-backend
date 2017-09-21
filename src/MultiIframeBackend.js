@@ -48,19 +48,24 @@ export default class MultiIframeBackend {
   }
 
   get windows() {
+    let parentWindow;
     let windows = [];
 
-    // Get initial window
     if (this.context && this.context.window) {
-      windows.push(this.context.window);
+      parentWindow = this.context.window;
     } else if (typeof window !== 'undefined') {
-      windows.push(window);
+      parentWindow = window;
+    }
 
-      // Get iframe windows
-      const iframes = window.document.getElementsByTagName('iframe');
-      [].forEach.call( iframes, (iframe) => {
-        windows.push(iframe.contentWindow)
-      });
+    if (typeof parentWindow !== 'undefined') {
+      windows.push(parentWindow);
+
+      if (typeof parentWindow.document !== 'undefined') {
+        const iframes = parentWindow.document.getElementsByTagName('iframe');
+        [].forEach.call( iframes, (iframe) => {
+          windows.push(iframe.contentWindow);
+        });
+      }
     }
 
     return windows;

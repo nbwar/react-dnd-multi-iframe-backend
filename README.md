@@ -7,7 +7,7 @@ A Backend for React DnD that supports cross iframe functionality. Support for Ou
 If you use [npm](http://npmjs.com):
 
 ```
-npm install --save react-dnd-mulit-iframe-backend
+npm install --save react-dnd-multi-iframe-backend
 ```
 
 
