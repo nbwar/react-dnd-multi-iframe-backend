@@ -1,26 +1,38 @@
 {
-  "name": "react-dnd-html5-backend",
-  "version": "2.5.1",
-  "description": "HTML5 backend for React DnD",
+  "name": "react-dnd-multi-iframe-backend",
+  "version": "1.0.0",
+  "description": "Multi iframe support for React DnD",
   "main": "lib/index.js",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/react-dnd/react-dnd.git"
+    "url": "https://github.com/nbwar/react-dnd-multi-iframe-backend.git"
   },
   "scripts": {
-    "clean": "../../node_modules/.bin/rimraf lib",
-    "build:lib": "../../node_modules/.bin/babel src --out-dir lib",
-    "build:umd": "../../node_modules/.bin/webpack",
-    "build": "../../node_modules/.bin/npm-run-all --parallel build:*",
-    "test": "../../node_modules/.bin/npm-run-all clean build",
-    "prepublish": "npm test"
+    "clean": "node_modules/.bin/rimraf lib",
+    "build:lib": "node_modules/.bin/babel src --out-dir lib",
+    "build:umd": "node_modules/.bin/webpack",
+    "build": "node_modules/.bin/npm-run-all --parallel build:*",
+    "test": "npm run test:lint && jest --coverage --silent",
+    "test:lint": "npm run lint --quiet",
+    "lint": "eslint",
+    "unit_test": "jest",
+    "prepublishOnly": "npm test"
   },
   "devDependencies": {
+    "babel-loader": "^7.1.2",
+    "babel-preset-env": "^1.6.0",
+    "babel-preset-stage-2": "^6.24.1",
+    "eslint": "^4.7.1",
+    "jest": "^21.1.0",
     "react-dnd": "^2.5.1"
   },
   "dependencies": {
-    "lodash": "^4.2.0"
+    "babel-cli": "^6.26.0",
+    "lodash": "^4.2.0",
+    "npm-run-all": "^4.1.1",
+    "rimraf": "^2.6.2",
+    "webpack": "^3.6.0"
   },
   "peerDependencies": {
     "react-dnd": "^2.5.1"

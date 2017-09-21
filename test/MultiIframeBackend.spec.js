@@ -1,4 +1,4 @@
-import HTML5Backend from '../src/HTML5Backend';
+import MultiIframeBackend from '../src/MultiIframeBackend';
 
 describe('The HTML5 Backend', () => {
   describe('window injection', () => {
@@ -12,9 +12,10 @@ describe('The HTML5 Backend', () => {
       const mockWindow = global.window;
       try {
         delete global.window;
-        const backend = new HTML5Backend(mockManager);
+        const backend = new MultiIframeBackend(mockManager);
         expect(backend).toBeDefined();
-        expect(backend.window).toBeUndefined();
+        expect(backend.windows).toEqual([]);
+
       } finally {
         global.window = mockWindow;
       }
@@ -27,9 +28,9 @@ describe('The HTML5 Backend', () => {
         getRegistry: () => null,
         getContext: () => ({}),
       };
-      const backend = new HTML5Backend(mockManager);
+      const backend = new MultiIframeBackend(mockManager);
       expect(backend).toBeDefined();
-      expect(backend.window).toBeDefined();
+      expect(backend.windows.length).toEqual(1);
     });
 
     it('allows a window to be injected', () => {
@@ -43,9 +44,9 @@ describe('The HTML5 Backend', () => {
           },
         }),
       };
-      const backend = new HTML5Backend(mockManager);
+      const backend = new MultiIframeBackend(mockManager);
       expect(backend).toBeDefined();
-      expect(backend.window.x).toEqual(1);
+      expect(backend.windows[0].x).toEqual(1);
     });
   });
 });

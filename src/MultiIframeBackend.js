@@ -6,7 +6,7 @@ import { getNodeClientOffset, getEventClientOffset, getDragPreviewOffset } from 
 import { createNativeDragSource, matchNativeItemType } from './NativeDragSources';
 import * as NativeTypes from './NativeTypes';
 
-export default class HTML5Backend {
+export default class MultiIframeBackend {
   constructor(manager) {
     this.actions = manager.getActions();
     this.monitor = manager.getMonitor();
@@ -47,38 +47,56 @@ export default class HTML5Backend {
     this.isNodeInDocument = this.isNodeInDocument.bind(this);
   }
 
-  get window() {
+  get windows() {
+    let windows = [];
+
+    // Get initial window
     if (this.context && this.context.window) {
-      return this.context.window;
+      windows.push(this.context.window);
     } else if (typeof window !== 'undefined') {
-      return window;
+      windows.push(window);
+
+      // Get iframe windows
+      const iframes = window.document.getElementsByTagName('iframe');
+      [].forEach.call( iframes, (iframe) => {
+        windows.push(iframe.contentWindow)
+      });
     }
-    return undefined;
+
+    return windows;
+  }
+
+  _anyWindows() {
+    return this.windows === undefined || this.windows === [];
   }
 
   setup() {
-    if (this.window === undefined) {
+    if (this._anyWindows()) {
       return;
     }
 
-    if (this.window.__isReactDndBackendSetUp) { // eslint-disable-line no-underscore-dangle
-      throw new Error('Cannot have two HTML5 backends at the same time.');
-    }
-    this.window.__isReactDndBackendSetUp = true; // eslint-disable-line no-underscore-dangle
-    this.addEventListeners(this.window);
+    this.windows.forEach( (wind) => {
+      if (wind.__isReactDndBackendSetUp) { // eslint-disable-line no-underscore-dangle
+        throw new Error('Cannot have two HTML5 backends at the same time.');
+      }
+      wind.__isReactDndBackendSetUp = true; // eslint-disable-line no-underscore-dangle
+      this.addEventListeners(wind);
+    });
   }
 
   teardown() {
-    if (this.window === undefined) {
+    if (this._anyWindows()) {
       return;
     }
 
-    this.window.__isReactDndBackendSetUp = false; // eslint-disable-line no-underscore-dangle
-    this.removeEventListeners(this.window);
-    this.clearCurrentDragSourceNode();
-    if (this.asyncEndDragFrameId) {
-      this.window.cancelAnimationFrame(this.asyncEndDragFrameId);
-    }
+    this.windows.forEach( (wind) => {
+      wind.__isReactDndBackendSetUp = false; // eslint-disable-line no-underscore-dangle
+      this.removeEventListeners(wind);
+      this.clearCurrentDragSourceNode();
+      if (this.asyncEndDragFrameId) {
+        wind.cancelAnimationFrame(this.asyncEndDragFrameId);
+      }
+    })
   }
 
   addEventListeners(target) {
@@ -214,16 +232,20 @@ export default class HTML5Backend {
     // See https://bugzilla.mozilla.org/show_bug.cgi?id=656164
     // This is not true for other browsers.
     if (isFirefox()) {
-      this.window.addEventListener('mouseover', this.asyncEndDragNativeItem, true);
+      this.windows.forEach( (wind) => {
+        wind.addEventListener('mouseover', this.asyncEndDragNativeItem, true);
+      });
     }
   }
 
   asyncEndDragNativeItem() {
-    this.asyncEndDragFrameId = this.window.requestAnimationFrame(this.endDragNativeItem);
-    if (isFirefox()) {
-      this.window.removeEventListener('mouseover', this.asyncEndDragNativeItem, true);
-      this.enterLeaveCounter.reset();
-    }
+    this.windows.forEach( (wind) => {
+      this.asyncEndDragFrameId = wind.requestAnimationFrame(this.endDragNativeItem);
+      if (isFirefox()) {
+        wind.removeEventListener('mouseover', this.asyncEndDragNativeItem, true);
+        this.enterLeaveCounter.reset();
+      }
+    });
   }
 
   endDragNativeItem() {
@@ -239,9 +261,13 @@ export default class HTML5Backend {
 
   isNodeInDocument(node) {
     // Check the node either in the main document or in the current context
-    return document.body.contains(node) || this.window
-      ? this.window.document.body.contains(node)
-      : false;
+    this.windows.forEach( (wind) => {
+      if (wind) {
+        return true;
+      }
+    });
+
+    return false;
   }
 
   endDragIfSourceWasRemovedFromDOM() {
@@ -264,7 +290,8 @@ export default class HTML5Backend {
     // Receiving a mouse event in the middle of a dragging operation
     // means it has ended and the drag source node disappeared from DOM,
     // so the browser didn't dispatch the dragend event.
-    this.window.addEventListener('mousemove', this.endDragIfSourceWasRemovedFromDOM, true);
+    this.windows.forEach( wind => wind.addEventListener('mousemove', this.endDragIfSourceWasRemovedFromDOM, true));
+
   }
 
   clearCurrentDragSourceNode() {
@@ -272,7 +299,11 @@ export default class HTML5Backend {
       this.currentDragSourceNode = null;
       this.currentDragSourceNodeOffset = null;
       this.currentDragSourceNodeOffsetChanged = false;
-      this.window.removeEventListener('mousemove', this.endDragIfSourceWasRemovedFromDOM, true);
+
+      this.windows.forEach( (wind) => {
+        wind.removeEventListener('mousemove', this.endDragIfSourceWasRemovedFromDOM, true);
+      });
+
       return true;
     }
 

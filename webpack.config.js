@@ -15,9 +15,9 @@ module.exports = {
     ]
   },
   output: {
-    filename: 'dist/ReactDnDHTML5Backend.min.js',
+    filename: 'dist/ReactDnDMultiIframeBackend.min.js',
     libraryTarget: 'umd',
-    library: 'ReactDnDHTML5Backend'
+    library: 'ReactDnDMultiIframeBackend'
   },
   plugins: [
     new webpack.DefinePlugin({
